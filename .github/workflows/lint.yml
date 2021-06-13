@@ -1,0 +1,23 @@
+name: linter
+
+
+on:
+
+  push:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: run lint
+        run: make lint
+
+      - name: run jest
+        run: make test
