@@ -18,6 +18,3 @@ jobs:
 
       - name: run lint
         run: make lint
-
-      - name: run jest
-        run: make test
