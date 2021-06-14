@@ -1,13 +1,8 @@
-name: linter
-
+name: Node_CI
 
 on:
-
-  push:
-    branches:
-      - '**'
-    tags:
-      - '**'
+  - push
+  - pull_request
 
 jobs:
 
