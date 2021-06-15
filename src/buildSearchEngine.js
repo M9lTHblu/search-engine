@@ -1,16 +1,11 @@
-
-
 export default (docs) => (
   {
     coll: docs,
-    search: function (str) {
+    search(str) {
       if (str === '') return [];
-      return this.coll.filter((item) => {
-        const words = item.text.split(' ');
-        if (words.includes(str)) {
-          return item;
-        }
-      }).map(({id}) => id)
-    }
+      return this.coll
+        .filter(({ text }) => text.split(' ').includes(str))
+        .map(({ id }) => id);
+    },
   }
-)
+);
