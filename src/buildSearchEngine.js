@@ -1,20 +1,24 @@
-import _ from 'lodash';
-
 export default (docs) => (
   {
     coll: docs,
-    processText: (text) => text.match(/\w+/g),
+
     search(str) {
       if (str === '') {
         return [];
       }
-      const [processedStr] = this.processText(str);
-      const filtered = this.coll.filter(({ text }) => this.processText(text).includes(processedStr))
+
+      return this.coll
         .map((item) => {
-          const count = _.words(item.text).filter((word) => word === processedStr).length;
-          return { ...item, metricCount: count };
-        });
-      return _.sortBy(filtered, 'metricCount').map(({ id }) => id).reverse();
+          const count = str
+            .match(/\w+/g)
+            .reduce((acc, word) => (item.text.match(/\w+/g).includes(word) ? acc + 1 : acc), 0);
+
+          return { ...item, count };
+        })
+        .filter((item) => item.count > 0)
+        .sort((a, b) => a.count - b.count)
+        .map(({ id }) => id)
+        .reverse();
     },
   }
 );

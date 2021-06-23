@@ -10,3 +10,7 @@ test('relevance metric', () => {
   expect(searchEngine.search('pint!')).toEqual(['doc1']);
   expect(searchEngine.search('shoot')).toEqual(['doc2', 'doc1']);
 });
+
+test('fuzzy search', () => {
+  expect(searchEngine.search('shoot at me')).toEqual(['doc2', 'doc1']);
+});
