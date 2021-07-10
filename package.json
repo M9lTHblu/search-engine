@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "bin": {
-    "nodejs-package": "bin/nodejs-package.js"
-  },
+  "main": "index.js"
   "scripts": {
     "test":  "npx jest --bail"
   },
