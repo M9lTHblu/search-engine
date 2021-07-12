@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+<<<<<<< HEAD
   "main": "./index.js",
+=======
+  "main": "index.js",
+>>>>>>> cf5e00a00167589405b0361da3d59f34c213f118
   "scripts": {
     "test":  "npx jest --bail"
   },
