@@ -1,58 +1,72 @@
-import union from 'lodash/union';
+import _ from 'lodash';
 
-export default (data) => (
-  {
-    docs: data,
+export default (documents) => new Search(documents);
 
-    process(str) {
-      return str.match(/\w+/g);
-    },
-
-    ranging(words, docs) {
-      return (
-        docs.map((doc) => {
-          const matches = words.reduce((acc, word) => {
-            const count = this.process(doc.text).filter((wordOfDoc) => wordOfDoc === word).length;
-            return acc + count;
-          }, 0);
-          return { ...doc, matches };
-        })
-      );
-    },
-
-    sort(docs) {
-      return docs
-        .filter((doc) => doc.matches > 0)
-        .sort((docA, docB) => docB.matches - docA.matches);
-    },
-
-    invertIndex(docs) {
-      const texts = docs.flatMap(({ text }) => this.process(text));
-
-      return texts.reduce((inverted, word) => {
-        const filteredDocs = docs.filter(({ text }) => text.includes(word));
-        return { ...inverted, [word]: filteredDocs };
-      }, {});
-    },
-
-    search(str) {
-      if (str === '') {
-        return [];
-      }
-      const processedStr = this.process(str);
-      const invertedIndex = this.invertIndex(this.docs);
-      const keywords = Object.keys(invertedIndex);
-
-      const actualDocs = processedStr.reduce((acc, word) => {
-        if (keywords.includes(word)) {
-          return union(acc, invertedIndex[word]);
-        }
-        return acc;
-      }, []);
-
-      const rangingDocs = this.ranging(processedStr, actualDocs);
-
-      return this.sort(rangingDocs).map(({ id }) => id);
-    },
+class Search {
+  constructor(data = []) {
+    this.docs = data
+    this.termsAndDocs = this.invertIndex(data)
   }
-);
+
+  getDocsCount(docs) {
+    return docs.length;
+  }
+
+  getTermDocsCount(term) {
+    return this.termsAndDocs[term].length;
+  }
+
+  getWordsOfDocCount(docId) {
+    const { text } = this.docs[docId];
+    return this.process(text).length;
+  }
+
+  getMatchedDocs(term) {
+    return this.docs
+      .filter(({ text }) => this.process(text).includes(term));
+  }
+
+  process(str) {
+    return _.words(str.toLowerCase())
+  }
+
+  invertIndex() {
+    const allWordsOfDocs = this.docs.flatMap(({ text }) =>
+      _.uniq(this.process(text)));
+
+    const termsAndDocs = allWordsOfDocs.reduce((acc, term) => {
+      const matchedDocs = this.getMatchedDocs(term);
+      const docsCount = this.getDocsCount(matchedDocs);
+      const totalDocsCount = this.getDocsCount(this.docs);
+      const idf = Math.log(totalDocsCount / docsCount);
+
+      const addedMetrics = matchedDocs.map((doc) => {
+        const words = this.process(doc.text);
+        const tf = words.filter(word => word === term).length / words.length;
+        return { ...doc, tf, idf, tfIdf: tf * idf }
+      })
+
+      return { ...acc, [term]: addedMetrics }
+    }, {});
+
+    return termsAndDocs
+  }
+
+  search(str) {
+    if (str === '') {
+      return [];
+    }
+    const res = this.process(str).flatMap((term) => {
+      const docs = this.termsAndDocs[term];
+      return  docs.reduce((acc, { id, tfIdf }) => {
+        if (acc[id]) {
+          acc[id] += tfIdf;
+        } else {
+          acc[id] = tfIdf;
+        }
+        return acc
+      }, {})
+    })
+    return Object.entries(res[0]).sort(([, value1], [, value2]) => value2 - value1).map(([id, ]) => id)
+  }
+}
